@@ -1,0 +1,87 @@
+from flask import Flask, render_template, request, jsonify
+
+app = Flask(__name__)
+
+# Sample database of diseases and medicines
+disease_medicine_db = {
+    "Cold": ["Paracetamol", "Cetirizine", "Vitamin C"],
+    "Flu": ["Oseltamivir", "Paracetamol", "Ibuprofen"],
+    "Headache": ["Aspirin", "Ibuprofen", "Acetaminophen"],
+    "Diabetes": ["Metformin", "Insulin", "Glipizide"]
+}
+
+@app.route('/')
+def home():
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Medicine Recommendation</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                background-color: #f4f4f4;
+                padding: 50px;
+            }
+            h1 {
+                color: #333;
+            }
+            select, button {
+                padding: 10px;
+                margin: 10px;
+                font-size: 16px;
+            }
+            button {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #218838;
+            }
+            p {
+                font-size: 18px;
+                color: #555;
+            }
+        </style>
+        <script>
+            function getMedicine() {
+                let disease = document.getElementById("disease").value;
+                fetch("/get_medicine", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ disease: disease })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("medicines").innerText = "Recommended Medicines: " + data.medicines.join(", ");
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Medicine Recommendation System</h1>
+        <label for="disease">Select a disease:</label>
+        <select id="disease">
+            <option value="Cold">Cold</option>
+            <option value="Flu">Flu</option>
+            <option value="Headache">Headache</option>
+            <option value="Diabetes">Diabetes</option>
+        </select>
+        <button onclick="getMedicine()">Get Medicine</button>
+        <p id="medicines"></p>
+    </body>
+    </html>
+    '''
+
+@app.route('/get_medicine', methods=['POST'])
+def get_medicine():
+    data = request.json
+    disease = data.get("disease")
+    medicines = disease_medicine_db.get(disease, [])
+    return jsonify({"medicines": medicines})
+
+if __name__ == '__main__':
+    app.run(debug=True)
